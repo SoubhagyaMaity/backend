@@ -93,3 +93,133 @@ export const updateCompany = async (req, res) => {
         console.log(error);
     }
 }
+‎backend/index.js
++40
+Original file line number	Diff line number	Diff line change
+@@ -0,0 +1,40 @@
+import express from "express";
+import cookieParser from "cookie-parser";
+import cors from "cors";
+import dotenv from "dotenv";
+import connectDB from "./utils/db.js";
+import userRoute from "./routes/user.route.js";
+import companyRoute from "./routes/company.route.js";
+import jobRoute from "./routes/job.route.js";
+import applicationRoute from "./routes/application.route.js";
+dotenv.config({});
+const app = express();
+// middleware
+app.use(express.json());
+app.use(express.urlencoded({extended:true}));
+app.use(cookieParser());
+const corsOptions = {
+    origin:'http://localhost:5173',
+    credentials:true
+}
+app.use(cors(corsOptions));
+const PORT = process.env.PORT || 3000;
+// api's
+app.use("/api/v1/user", userRoute);
+app.use("/api/v1/company", companyRoute);
+app.use("/api/v1/job", jobRoute);
+app.use("/api/v1/application", applicationRoute);
+app.listen(PORT,()=>{
+    connectDB();
+    console.log(`Server running at port ${PORT}`);
+})
+‎backend/models/job.model.js
++52
+Original file line number	Diff line number	Diff line change
+@@ -0,0 +1,52 @@
+import mongoose from "mongoose";
+const jobSchema = new mongoose.Schema({
+    title: {
+        type: String,
+        required: true
+    },
+    description: {
+        type: String,
+        required: true
+    },
+    requirements: [{
+        type: String
+    }],
+    salary: {
+        type: Number,
+        required: true
+    },
+    experienceLevel:{
+        type:Number,
+        required:true,
+    },
+    location: {
+        type: String,
+        required: true
+    },
+    jobType: {
+        type: String,
+        required: true
+    },
+    position: {
+        type: Number,
+        required: true
+    },
+    company: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Company',
+        required: true
+    },
+    created_by: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
+    applications: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Application',
+        }
+    ]
+},{timestamps:true});
+export const Job = mongoose.model("Job", jobSchema);
+‎backend/models/user.model.js
++38
+Original file line number	Diff line number	Diff line change
+@@ -0,0 +1,38 @@
+import mongoose from "mongoose";
+const userSchema = new mongoose.Schema({
+    fullname: {
+        type: String,
+        required: true
+    },
+    email: {
+        type: String,
+        required: true,
+        unique: true
+    },
+    phoneNumber: {
+        type: Number,
+        required: true
+    },
+    password:{
+        type:String,
+        required:true,
+    },
+    role:{
+        type:String,
+        enum:['student','recruiter'],
+        required:true
+    },
+    profile:{
+        bio:{type:String},
+        skills:[{type:String}],
+        resume:{type:String}, // URL to resume file
+        resumeOriginalName:{type:String},
+        company:{type:mongoose.Schema.Types.ObjectId, ref:'Company'}, 
+        profilePhoto:{
+            type:String,
+            default:""
+        }
+    },
+},{timestamps:true});
+export const User = mongoose.model('User', userSchema);
